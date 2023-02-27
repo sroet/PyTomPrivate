@@ -1,8 +1,6 @@
-from pytom.agnostic.tools import paste_in_center, create_sphere
 from pytom.gpu.initialize import xp, device
 from pytom.agnostic.normalise import meanUnderMask, stdUnderMask, meanVolUnderMask, stdVolUnderMask
-from pytom.agnostic.normalise import meanVolUnderMaskPlanned, stdVolUnderMaskPlanned
-from pytom.agnostic.normalise import normaliseUnderMask, mean0std1, subtractMeanUnderMask
+from pytom.agnostic.normalise import normaliseUnderMask, mean0std1
 
 
 # Correlation Functions
@@ -13,7 +11,8 @@ def FLCF(volume, template, mask=None, stdV=None):
     @param volume: target volume
     @param template: template to be searched. It can have smaller size then target volume.
     @param mask: template mask. If not given, a default sphere mask will be used.
-    @param stdV: standard deviation of the target volume under mask, which do not need to be calculated again when the mask is identical.
+    @param stdV: standard deviation of the target volume under mask,
+                 which do not need to be calculated again when the mask is identical.
 
     @return: the local correlation function
     '''
@@ -33,7 +32,9 @@ def FLCF(volume, template, mask=None, stdV=None):
         meanV = meanVolUnderMask(volume, mask)
         stdV = stdVolUnderMask(volume, mask, meanV)
 
-    res =  xp.fft.fftshift(xp.fft.ifftn(xp.conj(xp.fft.fftn(temp)) * xp.fft.fftn(volume))).real / stdV / p
+    res =  xp.fft.fftshift(
+            xp.fft.ifftn(xp.conj(xp.fft.fftn(temp)) * xp.fft.fftn(volume))
+            ).real / stdV / p
     return res
 
 def xcc(volume, template, mask=None, volumeIsNormalized=False):
@@ -122,7 +123,7 @@ def xcf(volume, template, mask=None, stdV=None, ):
 
     @param volume : The search volume
     @type volume: L{xp.ndarray}
-    @param template : The template searched (this one will be used for conjugate complex multiplication)
+    @param template : The template searched (this will be used for conjugate complex multiplication)
     @type template: L{xp.ndarray}
     @param mask: Will be unused, only for compatibility reasons with FLCF
     @param stdV: Will be unused, only for compatibility reasons with FLCF
@@ -164,7 +165,7 @@ def xcf_mult(volume, template, mask, stdV=None, ):
 
     @param volume : The search volume
     @type volume: L{pytom_volume.vol}
-    @param template : The template searched (this one will be used for conjugate complex multiplication)
+    @param template : The template searched (this will be used for conjugate complex multiplication)
     @type template: L{pytom_volume.vol}
     @param mask: Will be unused, only for compatibility reasons with FLCF
     @param stdV: Will be unused, only for compatibility reasons with FLCF
@@ -198,9 +199,10 @@ def nXcf(volume, template, mask=None, stdV=None, gpu=False):
     of two equal objects would yield a max nxcf peak of 1.
 
     @param volume: The search volume
-    @param template: The template searched (this one will be used for conjugate complex multiplication)
+    @param template: The template searched (this will be used for conjugate complex multiplication)
     @type template: L{xp.ndarray}
-    @param mask: template mask. If not given, a default sphere mask will be generated which has the same size with the given template.
+    @param mask: template mask. Default is a sphere mask that will be generated with the same size
+                 as the given template.
     @type mask: L{xp.ndarray}
     @param stdV: Will be unused, only for compatibility reasons with FLCF
     @return: the calculated nXcf volume
@@ -209,7 +211,7 @@ def nXcf(volume, template, mask=None, stdV=None, gpu=False):
     @change: masking of template implemented
     """
 
-    if not (mask is None):
+    if mask is not None:
         result = xcf_mult(normaliseUnderMask(volume=volume, mask=mask, p=None),
                      normaliseUnderMask(volume=template, mask=mask, p=None), mask)
     else:
@@ -219,7 +221,8 @@ def nXcf(volume, template, mask=None, stdV=None, gpu=False):
 
 def weightedXCC(volume,reference,numberOfBands,wedgeAngle=-1):
     """
-    weightedXCC: Determines the band weighted correlation coefficient for a volume and reference. Notation according Steward/Grigorieff paper
+    weightedXCC: Determines the band weighted correlation coefficient for a volume and reference.
+                 Notation according Steward/Grigorieff paper
     @param volume: A volume
     @type volume: L{xp.ndarray}
     @param reference: A reference of same size as volume
@@ -291,7 +294,7 @@ def weightedXCF(volume, reference, numberOfBands, wedgeAngle=-1):
     weightedXCF: Determines the weighted correlation function for volume and reference
     @param volume: A volume
     @param reference: A reference
-    @param numberOfBands:Number of bands
+    @param numberOfBands: Number of bands
     @param wedgeAngle: A optional wedge angle
     @return: The weighted correlation function
     @rtype: L{pytom_volume.vol}
@@ -308,7 +311,8 @@ def weightedXCF(volume, reference, numberOfBands, wedgeAngle=-1):
     q = 0
 
     if wedgeAngle >= 0:
-        wedgeFilter = pytom_freqweight.weight(wedgeAngle, 0, volume.sizeX(), volume.sizeY(), volume.sizeZ())
+        wedgeFilter = pytom_freqweight.weight(wedgeAngle, 0,
+                volume.sizeX(), volume.sizeY(), volume.sizeZ())
         wedgeVolume = wedgeFilter.getWeightVolume(True)
     else:
         wedgeVolume = xp.ones_like(volume)
@@ -575,7 +579,9 @@ def FSC(volume1, volume2, numberBands=None, mask=None, verbose=False, filename=N
             volume2 = volume2 * mask
 
         else:
-            raise RuntimeError('FSC: Mask must be a volume OR a Mask object OR a string path to a mask!')
+            raise RuntimeError(
+                    'FSC: Mask must be a volume OR a Mask object OR a string path to a mask!'
+                    )
 
     fscResult = []
     band = [-1, -1]
